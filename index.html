@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reino de las Sombras - Juego de Gestión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1410;
+            --bg-medium: #2d2419;
+            --bg-light: #3d3229;
+            --accent-gold: #d4af37;
+            --accent-red: #8b1a1a;
+            --accent-blue: #1e3a5f;
+            --accent-green: #2d5016;
+            --text-light: #f4e9d9;
+            --text-dim: #b8a488;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Text', serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            background-image: 
+                repeating-linear-gradient(90deg, rgba(212, 175, 55, 0.03) 0px, transparent 1px, transparent 20px, rgba(212, 175, 55, 0.03) 21px),
+                repeating-linear-gradient(0deg, rgba(212, 175, 55, 0.03) 0px, transparent 1px, transparent 20px, rgba(212, 175, 55, 0.03) 21px);
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 2px solid var(--accent-gold);
+            margin-bottom: 30px;
+            position: relative;
+            animation: fadeIn 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--accent-gold);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.7), 0 0 30px rgba(212, 175, 55, 0.3);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 4px 8px rgba(0, 0, 0, 0.7), 0 0 30px rgba(212, 175, 55, 0.3); }
+            50% { text-shadow: 0 4px 8px rgba(0, 0, 0, 0.7), 0 0 50px rgba(212, 175, 55, 0.6); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--text-dim);
+            font-style: italic;
+            letter-spacing: 2px;
+        }
+
+        .map-container {
+            background: var(--bg-medium);
+            padding: 30px;
+            border: 3px solid var(--accent-gold);
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .map-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .territories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .territory {
+            background: var(--bg-light);
+            padding: 20px;
+            border: 2px solid var(--accent-gold);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .territory:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .territory.conquered {
+            background: var(--accent-green);
+            border-color: #4a7028;
+        }
+
+        .territory.player {
+            background: var(--accent-blue);
+            border-color: #2d5a8f;
+        }
+
+        .territory.enemy {
+            background: var(--accent-red);
+            border-color: #5a0f0f;
+        }
+
+        .territory-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .territory-status {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .info-card {
+            background: linear-gradient(145deg, var(--bg-medium) 0%, var(--bg-light) 100%);
+            padding: 20px;
+            border: 1px solid var(--accent-gold);
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, var(--accent-gold), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 0;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .info-card:hover::before {
+            opacity: 0.2;
+        }
+
+        .info-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .info-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: var(--bg-medium);
+            padding: 25px;
+            border: 2px solid var(--accent-gold);
+            position: relative;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        }
+
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            border-bottom: 1px solid var(--accent-gold);
+            padding-bottom: 10px;
+        }
+
+        .action-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(145deg, var(--bg-light), var(--bg-medium));
+            border: 2px solid var(--accent-gold);
+            color: var(--text-light);
+            padding: 18px 25px;
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .action-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(145deg, var(--accent-gold), #c19b2a);
+            color: var(--bg-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .action-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: var(--bg-light);
+        }
+
+        .action-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .enemy-list, .building-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .enemy-item, .building-item {
+            background: var(--bg-light);
+            padding: 15px;
+            border-left: 4px solid var(--accent-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .enemy-item:hover, .building-item:hover {
+            background: #4a3d32;
+            border-left-width: 8px;
+            transform: translateX(5px);
+        }
+
+        .enemy-name, .building-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .enemy-power, .building-effect {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        .attack-btn, .build-btn {
+            background: var(--accent-red);
+            border: 1px solid #5a0f0f;
+            color: var(--text-light);
+            padding: 10px 20px;
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .build-btn {
+            background: var(--accent-green);
+            border-color: #1d3510;
+        }
+
+        .attack-btn:hover {
+            background: #a82020;
+            box-shadow: 0 4px 15px rgba(139, 26, 26, 0.6);
+        }
+
+        .build-btn:hover {
+            background: #3a6b1f;
+            box-shadow: 0 4px 15px rgba(45, 80, 22, 0.6);
+        }
+
+        .log {
+            background: var(--bg-dark);
+            padding: 20px;
+            border: 2px solid var(--accent-gold);
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            animation: logEntry 0.5s ease-out;
+        }
+
+        @keyframes logEntry {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-victory {
+            color: #6dbd45;
+        }
+
+        .log-defeat {
+            color: #d94545;
+        }
+
+        .log-build {
+            color: #5a9dd9;
+        }
+
+        .log-recruit {
+            color: var(--accent-gold);
+        }
+
+        .progress-bar {
+            background: var(--bg-dark);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-gold), #f4d03f);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            animation: modalFade 0.3s ease-out;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--bg-medium);
+            padding: 40px;
+            border: 3px solid var(--accent-gold);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: modalSlide 0.4s ease-out;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .market-item {
+            background: var(--bg-light);
+            padding: 20px;
+            border: 2px solid var(--accent-gold);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .market-item:hover {
+            background: #4a3d32;
+            transform: translateX(5px);
+        }
+
+        .market-info {
+            flex: 1;
+        }
+
+        .market-item-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .market-item-desc {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        .market-btn {
+            background: var(--accent-gold);
+            color: var(--bg-dark);
+            border: none;
+            padding: 12px 25px;
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .market-btn:hover {
+            background: #f4d03f;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.6);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background: var(--bg-light);
+            border: 2px solid var(--accent-gold);
+            color: var(--text-light);
+            padding: 12px 25px;
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tab:hover {
+            background: #4a3d32;
+        }
+
+        .tab.active {
+            background: var(--accent-gold);
+            color: var(--bg-dark);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .modal-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .close-modal {
+            background: var(--accent-gold);
+            color: var(--bg-dark);
+            border: none;
+            padding: 15px 40px;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: #f4d03f;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-gold);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f4d03f;
+        }
+    </style>
+</head>
+<body>
+    <div class="vignette"></div>
+    
+    <div class="container">
+        <header>
+            <h1>⚔️ REINO DE LAS SOMBRAS ⚔️</h1>
+            <p class="subtitle">Conquista, Gobierna, Domina</p>
+        </header>
+
+        <!-- Mapa de Territorios -->
+        <div class="map-container">
+            <h2 class="map-title">🗺️ MAPA DEL REINO</h2>
+            <div class="territories-grid" id="territoriesMap"></div>
+        </div>
+
+        <div class="game-info">
+            <div class="info-card">
+                <div class="info-label">💰 Oro</div>
+                <div class="info-value" id="gold">1500</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="gold-bar" style="width: 50%"></div>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🌾 Comida</div>
+                <div class="info-value" id="food">800</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="food-bar" style="width: 50%"></div>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🪨 Piedra</div>
+                <div class="info-value" id="stone">200</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🪵 Madera</div>
+                <div class="info-value" id="wood">300</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">⚔️ Ejército</div>
+                <div class="info-value" id="army">80</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🏹 Arqueros</div>
+                <div class="info-value" id="archers">30</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🐴 Caballería</div>
+                <div class="info-value" id="cavalry">10</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🏰 Población</div>
+                <div class="info-value" id="population">150</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🛡️ Defensa</div>
+                <div class="info-value" id="defense">30</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">⚡ Turno</div>
+                <div class="info-value" id="turn">1</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="section">
+                <h2 class="section-title">⚔️ Acciones Militares</h2>
+                <div class="action-grid">
+                    <button class="action-btn" onclick="recruitSoldiers()">
+                        Reclutar Soldados (-120💰 -60🌾)
+                    </button>
+                    <button class="action-btn" onclick="recruitArchers()">
+                        Reclutar Arqueros (-150💰 -40🌾 -30🪵)
+                    </button>
+                    <button class="action-btn" onclick="recruitCavalry()">
+                        Reclutar Caballería (-250💰 -80🌾)
+                    </button>
+                    <button class="action-btn" onclick="trainArmy()">
+                        Entrenar Ejército (-200💰)
+                    </button>
+                    <button class="action-btn" onclick="buildFortifications()">
+                        Fortificar Reino (-250💰 -100🪨)
+                    </button>
+                    <button class="action-btn" onclick="scoutEnemies()">
+                        Explorar Enemigos (-50💰)
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🏛️ Mercado</h2>
+                <div class="action-grid">
+                    <button class="action-btn" onclick="openMarket()">
+                        💰 Abrir Mercado
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🌾 Producción de Comida</h2>
+                <div class="action-grid">
+                    <button class="action-btn" onclick="goHunting()">
+                        Cazar Animales (-30💰 +100🌾)
+                    </button>
+                    <button class="action-btn" onclick="goFishing()">
+                        Pescar (-20💰 +80🌾)
+                    </button>
+                    <button class="action-btn" onclick="harvestCrops()">
+                        Cosechar Campos (-50💰 +150🌾)
+                    </button>
+                    <button class="action-btn" onclick="organizeRaid()">
+                        Saquear Aldeas (-100💰 +200🌾 +100💰)
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🏗️ Construcciones</h2>
+                <div class="building-list" id="buildingList"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🎯 Enemigos</h2>
+                <div class="enemy-list" id="enemyList"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">📜 Crónicas del Reino</h2>
+                <div class="log" id="gameLog"></div>
+            </div>
+        </div>
+
+        <div class="section" style="grid-column: 1/-1;">
+            <button class="action-btn" onclick="nextTurn()" style="width: 100%; font-size: 1.5rem; padding: 25px;">
+                ⏭️ PASAR TURNO ⏭️
+            </button>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modalTitle">VICTORIA</h2>
+            <p class="modal-text" id="modalText">¡Has conquistado todos los reinos!</p>
+            <button class="close-modal" onclick="restartGame()">JUGAR DE NUEVO</button>
+        </div>
+    </div>
+
+    <div class="modal" id="marketModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2 class="modal-title">💰 MERCADO DEL REINO</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchMarketTab('buy')">COMPRAR</button>
+                <button class="tab" onclick="switchMarketTab('sell')">VENDER</button>
+            </div>
+
+            <div id="buyTab" class="tab-content active">
+                <div class="market-item">
+                    <div class="market-info">
+                        <div class="market-item-name">🌾 Comida x100</div>
+                        <div class="market-item-desc">Abastece tus almacenes</div>
+                    </div>
+                    <button class="market-btn" onclick="buyResource('food', 100, 50)">50💰</button>
+                </div>
+                <div class="market-item">
+                    <div class="market-info">
+                        <div class="market-item-name">🪨 Piedra x50</div>
+                        <div class="market-item-desc">Material de construcción</div>
+                    </div>
+                    <button class="market-btn" onclick="buyResource('stone', 50, 80)">80💰</button>
+                </div>
+                <div class="market-item">
+                    <div class="market-info">
+                        <div class="market-item-name">🪵 Madera x50</div>
+                        <div class="market-item-desc">Material de construcción</div>
+                    </div>
+                    <button class="market-btn" onclick="buyResource('wood', 50, 60)">60💰</button>
+                </div>
+                <div class="market-item">
+                    <div class="market-info">
+                        <div class="market-item-name">⚔️ Mercenarios x20</div>
+                        <div class="market-item-desc">Soldados experimentados</div>
+                    </div>
+                    <button class="market-btn" onclick="buyMercenaries()">300💰</button>
+                </div>
+            </div>
+
+            <div id="sellTab" class="tab-content">
+                <div class="market-item">
+                    <div class="market-info">
+                        <div class="market-item-name">🌾 Comida x100</div>
+                        <div class="market-item-desc">Vende tu excedente</div>
+                    </div>
+                    <button class="market-btn" onclick="sellResource('food', 100, 35)">+35💰</button>
+                </div>
+                <div class="market-item">
+                    <div class="market-info">
+                        <div class="market-item-name">🪨 Piedra x50</div>
+                        <div class="market-item-desc">Vende piedra extra</div>
+                    </div>
+                    <button class="market-btn" onclick="sellResource('stone', 50, 60)">+60💰</button>
+                </div>
+                <div class="market-item">
+                    <div class="market-info">
+                        <div class="market-item-name">🪵 Madera x50</div>
+                        <div class="market-item-desc">Vende madera extra</div>
+                    </div>
+                    <button class="market-btn" onclick="sellResource('wood', 50, 45)">+45💰</button>
+                </div>
+            </div>
+
+            <button class="close-modal" onclick="closeMarket()" style="margin-top: 20px;">CERRAR</button>
+        </div>
+    </div>
+
+    <script>
+        // Estado del juego expandido
+        let gameState = {
+            gold: 1500,
+            food: 800,
+            stone: 200,
+            wood: 300,
+            army: 80,
+            archers: 30,
+            cavalry: 10,
+            population: 150,
+            defense: 30,
+            turn: 1,
+            armyPower: 1.0,
+            goldPerTurn: 120,
+            foodPerTurn: 70,
+            stonePerTurn: 20,
+            woodPerTurn: 30,
+            populationGrowth: 8
+        };
+
+        // Territorios del mapa
+        const territories = [
+            { name: 'Tu Reino', status: 'player', conquered: true },
+            { name: 'Bosque del Norte', status: 'neutral', conquered: false, enemy: 0 },
+            { name: 'Montañas del Este', status: 'neutral', conquered: false, enemy: 1 },
+            { name: 'Llanuras del Sur', status: 'neutral', conquered: false, enemy: 2 },
+            { name: 'Costa Oeste', status: 'neutral', conquered: false, enemy: 3 },
+            { name: 'Valle Central', status: 'neutral', conquered: false, enemy: 4 },
+            { name: 'Tierras Salvajes', status: 'enemy', conquered: false, enemy: 5 },
+            { name: 'Reino Sombrio', status: 'enemy', conquered: false, enemy: 6 }
+        ];
+
+        // Edificios expandidos
+        const buildings = [
+            { name: 'Granja Grande', cost: { gold: 200, wood: 50 }, effect: 'Comida +50/turno', built: false, foodBonus: 50 },
+            { name: 'Mina de Oro', cost: { gold: 400, stone: 100 }, effect: 'Oro +70/turno', built: false, goldBonus: 70 },
+            { name: 'Cantera', cost: { gold: 300, wood: 80 }, effect: 'Piedra +40/turno', built: false, stoneBonus: 40 },
+            { name: 'Aserradero', cost: { gold: 250, stone: 60 }, effect: 'Madera +50/turno', built: false, woodBonus: 50 },
+            { name: 'Cuartel', cost: { gold: 350, stone: 100, wood: 80 }, effect: 'Reclutamiento +50%', built: false, recruitBonus: 0.5 },
+            { name: 'Muralla de Piedra', cost: { gold: 500, stone: 200 }, effect: 'Defensa +40', built: false, defenseBonus: 40 },
+            { name: 'Mercado', cost: { gold: 450, wood: 100 }, effect: 'Oro +100/turno', built: false, goldBonus: 100 },
+            { name: 'Academia Militar', cost: { gold: 600, stone: 150 }, effect: 'Ejército +25% poder', built: false, powerBonus: 0.25 },
+            { name: 'Torre de Arqueros', cost: { gold: 400, wood: 120 }, effect: 'Defensa +30, Arqueros +10%', built: false, defenseBonus: 30, archerBonus: 0.1 },
+            { name: 'Establo Real', cost: { gold: 550, wood: 150 }, effect: 'Caballería +15% poder', built: false, cavalryBonus: 0.15 },
+            { name: 'Granero', cost: { gold: 300, wood: 100 }, effect: 'Comida +80/turno', built: false, foodBonus: 80 },
+            { name: 'Templo', cost: { gold: 700, stone: 200, wood: 150 }, effect: 'Población +15/turno', built: false, populationBonus: 15 }
+        ];
+
+        // Enemigos expandidos
+        let enemies = [
+            { name: 'Bandidos del Bosque', power: 40, gold: 300, food: 150, defeated: false, territory: 1 },
+            { name: 'Clan de Montaña', power: 90, gold: 600, stone: 200, defeated: false, territory: 2 },
+            { name: 'Señores de las Llanuras', power: 130, gold: 900, food: 400, defeated: false, territory: 3 },
+            { name: 'Piratas Costeros', power: 160, gold: 1200, wood: 300, defeated: false, territory: 4 },
+            { name: 'Reino del Valle', power: 220, gold: 1800, food: 600, defeated: false, territory: 5 },
+            { name: 'Horda Salvaje', power: 300, gold: 2500, stone: 400, defeated: false, territory: 6 },
+            { name: 'Imperio Oscuro', power: 400, gold: 3500, food: 800, defeated: false, territory: 7 }
+        ];
+
+        function updateUI() {
+            document.getElementById('gold').textContent = Math.floor(gameState.gold);
+            document.getElementById('food').textContent = Math.floor(gameState.food);
+            document.getElementById('stone').textContent = Math.floor(gameState.stone);
+            document.getElementById('wood').textContent = Math.floor(gameState.wood);
+            document.getElementById('army').textContent = gameState.army;
+            document.getElementById('archers').textContent = gameState.archers;
+            document.getElementById('cavalry').textContent = gameState.cavalry;
+            document.getElementById('population').textContent = gameState.population;
+            document.getElementById('defense').textContent = gameState.defense;
+            document.getElementById('turn').textContent = gameState.turn;
+
+            document.getElementById('gold-bar').style.width = Math.min(100, (gameState.gold / 3000) * 100) + '%';
+            document.getElementById('food-bar').style.width = Math.min(100, (gameState.food / 1500) * 100) + '%';
+
+            renderMap();
+            renderBuildings();
+            renderEnemies();
+        }
+
+        function renderMap() {
+            const map = document.getElementById('territoriesMap');
+            map.innerHTML = '';
+            
+            territories.forEach((territory, index) => {
+                const div = document.createElement('div');
+                div.className = `territory ${territory.status}`;
+                
+                let statusText = '';
+                if (territory.status === 'player') statusText = '👑 Tu Dominio';
+                else if (territory.conquered) statusText = '✅ Conquistado';
+                else if (territory.status === 'enemy') statusText = '⚔️ Enemigo';
+                else statusText = '🗡️ Neutral';
+                
+                div.innerHTML = `
+                    <div class="territory-name">${territory.name}</div>
+                    <div class="territory-status">${statusText}</div>
+                `;
+                
+                map.appendChild(div);
+            });
+        }
+
+        function renderBuildings() {
+            const list = document.getElementById('buildingList');
+            list.innerHTML = '';
+            
+            buildings.forEach((building, index) => {
+                const div = document.createElement('div');
+                div.className = 'building-item';
+                
+                if (building.built) {
+                    div.innerHTML = `
+                        <div>
+                            <div class="building-name">✅ ${building.name}</div>
+                            <div class="building-effect">${building.effect}</div>
+                        </div>
+                    `;
+                    div.style.opacity = '0.6';
+                } else {
+                    const costStr = Object.entries(building.cost)
+                        .map(([resource, amount]) => {
+                            const icons = { gold: '💰', stone: '🪨', wood: '🪵' };
+                            return `${amount}${icons[resource]}`;
+                        }).join(' ');
+                    
+                    div.innerHTML = `
+                        <div>
+                            <div class="building-name">${building.name}</div>
+                            <div class="building-effect">${building.effect}</div>
+                        </div>
+                        <button class="build-btn" onclick="buildBuilding(${index})">
+                            Construir ${costStr}
+                        </button>
+                    `;
+                }
+                
+                list.appendChild(div);
+            });
+        }
+
+        function renderEnemies() {
+            const list = document.getElementById('enemyList');
+            list.innerHTML = '';
+            
+            enemies.forEach((enemy, index) => {
+                if (!enemy.defeated) {
+                    const div = document.createElement('div');
+                    div.className = 'enemy-item';
+                    
+                    const rewards = [];
+                    if (enemy.gold) rewards.push(`${enemy.gold}💰`);
+                    if (enemy.food) rewards.push(`${enemy.food}🌾`);
+                    if (enemy.stone) rewards.push(`${enemy.stone}🪨`);
+                    if (enemy.wood) rewards.push(`${enemy.wood}🪵`);
+                    
+                    div.innerHTML = `
+                        <div>
+                            <div class="enemy-name">${enemy.name}</div>
+                            <div class="enemy-power">⚔️ Poder: ${enemy.power} | Botín: ${rewards.join(' ')}</div>
+                        </div>
+                        <button class="attack-btn" onclick="attack(${index})">
+                            ⚔️ Atacar
+                        </button>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+
+            if (enemies.every(e => e.defeated)) {
+                showModal('¡VICTORIA TOTAL!', '¡Has conquistado todos los reinos enemigos! Tu imperio se extiende por todas las tierras conocidas.');
+            }
+        }
+
+        function addLog(message, type = '') {
+            const log = document.getElementById('gameLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = `[Turno ${gameState.turn}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+            
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // Funciones militares
+        function recruitSoldiers() {
+            if (gameState.gold >= 120 && gameState.food >= 60) {
+                gameState.gold -= 120;
+                gameState.food -= 60;
+                let recruited = 25;
+                
+                const barracks = buildings.find(b => b.name === 'Cuartel' && b.built);
+                if (barracks) recruited = Math.floor(recruited * (1 + barracks.recruitBonus));
+                
+                gameState.army += recruited;
+                addLog(`Reclutaste ${recruited} soldados de infantería.`, 'log-recruit');
+                updateUI();
+            } else {
+                addLog('No tienes suficientes recursos para reclutar soldados.', 'log-defeat');
+            }
+        }
+
+        function recruitArchers() {
+            if (gameState.gold >= 150 && gameState.food >= 40 && gameState.wood >= 30) {
+                gameState.gold -= 150;
+                gameState.food -= 40;
+                gameState.wood -= 30;
+                let recruited = 15;
+                
+                const tower = buildings.find(b => b.name === 'Torre de Arqueros' && b.built);
+                if (tower) recruited = Math.floor(recruited * (1 + tower.archerBonus));
+                
+                gameState.archers += recruited;
+                addLog(`Reclutaste ${recruited} arqueros expertos.`, 'log-recruit');
+                updateUI();
+            } else {
+                addLog('No tienes suficientes recursos para reclutar arqueros.', 'log-defeat');
+            }
+        }
+
+        function recruitCavalry() {
+            if (gameState.gold >= 250 && gameState.food >= 80) {
+                gameState.gold -= 250;
+                gameState.food -= 80;
+                let recruited = 8;
+                
+                const stable = buildings.find(b => b.name === 'Establo Real' && b.built);
+                if (stable) recruited = Math.floor(recruited * (1 + stable.cavalryBonus));
+                
+                gameState.cavalry += recruited;
+                addLog(`Reclutaste ${recruited} jinetes de caballería pesada.`, 'log-recruit');
+                updateUI();
+            } else {
+                addLog('No tienes suficientes recursos para reclutar caballería.', 'log-defeat');
+            }
+        }
+
+        function trainArmy() {
+            if (gameState.gold >= 200 && (gameState.army > 0 || gameState.archers > 0)) {
+                gameState.gold -= 200;
+                gameState.armyPower += 0.15;
+                addLog(`Entrenaste a tus fuerzas. Poder de combate: ${(gameState.armyPower * 100).toFixed(0)}%.`, 'log-recruit');
+                updateUI();
+            } else {
+                addLog('No tienes recursos o tropas para entrenar.', 'log-defeat');
+            }
+        }
+
+        function buildFortifications() {
+            if (gameState.gold >= 250 && gameState.stone >= 100) {
+                gameState.gold -= 250;
+                gameState.stone -= 100;
+                gameState.defense += 15;
+                addLog(`Construiste fortificaciones. Defensa: ${gameState.defense}.`, 'log-build');
+                updateUI();
+            } else {
+                addLog('No tienes suficientes recursos para fortificar.', 'log-defeat');
+            }
+        }
+
+        function scoutEnemies() {
+            if (gameState.gold >= 50) {
+                gameState.gold -= 50;
+                const undefeated = enemies.filter(e => !e.defeated);
+                if (undefeated.length > 0) {
+                    const enemy = undefeated[0];
+                    addLog(`Tus exploradores reportan: ${enemy.name} tiene poder ${enemy.power}.`, 'log-build');
+                }
+                updateUI();
+            } else {
+                addLog('No tienes oro para explorar.', 'log-defeat');
+            }
+        }
+
+        // Funciones de producción de comida
+        function goHunting() {
+            if (gameState.gold >= 30) {
+                gameState.gold -= 30;
+                gameState.food += 100;
+                addLog('Tus cazadores regresan con abundante carne.', 'log-build');
+                updateUI();
+            } else {
+                addLog('No tienes oro para organizar una cacería.', 'log-defeat');
+            }
+        }
+
+        function goFishing() {
+            if (gameState.gold >= 20) {
+                gameState.gold -= 20;
+                gameState.food += 80;
+                addLog('Tus pescadores traen una buena captura.', 'log-build');
+                updateUI();
+            } else {
+                addLog('No tienes oro para enviar pescadores.', 'log-defeat');
+            }
+        }
+
+        function harvestCrops() {
+            if (gameState.gold >= 50) {
+                gameState.gold -= 50;
+                gameState.food += 150;
+                addLog('Cosechaste los campos. Los graneros están llenos.', 'log-build');
+                updateUI();
+            } else {
+                addLog('No tienes oro para la cosecha.', 'log-defeat');
+            }
+        }
+
+        function organizeRaid() {
+            if (gameState.gold >= 100 && gameState.army >= 20) {
+                gameState.gold -= 100;
+                const loot = Math.floor(Math.random() * 100) + 150;
+                gameState.food += 200;
+                gameState.gold += loot;
+                const casualties = Math.floor(Math.random() * 5) + 2;
+                gameState.army -= casualties;
+                addLog(`Saqueaste aldeas cercanas. +200🌾 +${loot}💰. Perdiste ${casualties} soldados.`, 'log-victory');
+                updateUI();
+            } else {
+                addLog('Necesitas al menos 100💰 y 20 soldados para saquear.', 'log-defeat');
+            }
+        }
+
+        // Construcciones
+        function buildBuilding(index) {
+            const building = buildings[index];
+            if (building.built) return;
+            
+            let canBuild = true;
+            for (const [resource, amount] of Object.entries(building.cost)) {
+                if (gameState[resource] < amount) {
+                    canBuild = false;
+                    break;
+                }
+            }
+            
+            if (canBuild) {
+                for (const [resource, amount] of Object.entries(building.cost)) {
+                    gameState[resource] -= amount;
+                }
+                
+                building.built = true;
+                
+                if (building.foodBonus) gameState.foodPerTurn += building.foodBonus;
+                if (building.goldBonus) gameState.goldPerTurn += building.goldBonus;
+                if (building.stoneBonus) gameState.stonePerTurn += building.stoneBonus;
+                if (building.woodBonus) gameState.woodPerTurn += building.woodBonus;
+                if (building.defenseBonus) gameState.defense += building.defenseBonus;
+                if (building.powerBonus) gameState.armyPower += building.powerBonus;
+                if (building.populationBonus) gameState.populationGrowth += building.populationBonus;
+                
+                addLog(`Construiste ${building.name}. ${building.effect}`, 'log-build');
+                updateUI();
+            } else {
+                addLog('No tienes suficientes recursos para esta construcción.', 'log-defeat');
+            }
+        }
+
+        // Combate
+        function attack(index) {
+            const enemy = enemies[index];
+            if (enemy.defeated) return;
+            
+            const ourPower = (gameState.army * gameState.armyPower) + 
+                           (gameState.archers * 1.5 * gameState.armyPower) + 
+                           (gameState.cavalry * 2.5 * gameState.armyPower) + 
+                           gameState.defense;
+            const enemyPower = enemy.power;
+            
+            if (ourPower > enemyPower) {
+                const armyCasualties = Math.floor(gameState.army * 0.15);
+                const archerCasualties = Math.floor(gameState.archers * 0.1);
+                const cavalryCasualties = Math.floor(gameState.cavalry * 0.12);
+                
+                gameState.army -= armyCasualties;
+                gameState.archers -= archerCasualties;
+                gameState.cavalry -= cavalryCasualties;
+                
+                if (enemy.gold) gameState.gold += enemy.gold;
+                if (enemy.food) gameState.food += enemy.food;
+                if (enemy.stone) gameState.stone += enemy.stone;
+                if (enemy.wood) gameState.wood += enemy.wood;
+                
+                enemy.defeated = true;
+                territories[enemy.territory].conquered = true;
+                territories[enemy.territory].status = 'player';
+                
+                const rewards = [];
+                if (enemy.gold) rewards.push(`${enemy.gold}💰`);
+                if (enemy.food) rewards.push(`${enemy.food}🌾`);
+                if (enemy.stone) rewards.push(`${enemy.stone}🪨`);
+                if (enemy.wood) rewards.push(`${enemy.wood}🪵`);
+                
+                addLog(`¡VICTORIA! Derrotaste a ${enemy.name}. Botín: ${rewards.join(' ')}. Bajas: ${armyCasualties}⚔️ ${archerCasualties}🏹 ${cavalryCasualties}🐴`, 'log-victory');
+            } else {
+                const armyCasualties = Math.floor(gameState.army * 0.35);
+                const archerCasualties = Math.floor(gameState.archers * 0.25);
+                const cavalryCasualties = Math.floor(gameState.cavalry * 0.3);
+                
+                gameState.army -= armyCasualties;
+                gameState.archers -= archerCasualties;
+                gameState.cavalry -= cavalryCasualties;
+                
+                const goldLost = Math.floor(gameState.gold * 0.15);
+                gameState.gold -= goldLost;
+                
+                addLog(`DERROTA. ${enemy.name} te repelió. Bajas: ${armyCasualties}⚔️ ${archerCasualties}🏹 ${cavalryCasualties}🐴 -${goldLost}💰`, 'log-defeat');
+            }
+            
+            if (gameState.army <= 0 && gameState.archers <= 0 && gameState.cavalry <= 0) {
+                showModal('DERROTA TOTAL', 'Tu ejército ha sido destruido. Tu reino cae en la oscuridad...');
+            }
+            
+            updateUI();
+        }
+
+        // Mercado
+        function openMarket() {
+            document.getElementById('marketModal').style.display = 'flex';
+        }
+
+        function closeMarket() {
+            document.getElementById('marketModal').style.display = 'none';
+        }
+
+        function switchMarketTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'buy') {
+                document.querySelector('.tab:first-child').classList.add('active');
+                document.getElementById('buyTab').classList.add('active');
+            } else {
+                document.querySelector('.tab:last-child').classList.add('active');
+                document.getElementById('sellTab').classList.add('active');
+            }
+        }
+
+        function buyResource(resource, amount, cost) {
+            if (gameState.gold >= cost) {
+                gameState.gold -= cost;
+                gameState[resource] += amount;
+                addLog(`Compraste ${amount} de ${resource} por ${cost}💰.`, 'log-build');
+                updateUI();
+            } else {
+                addLog('No tienes suficiente oro.', 'log-defeat');
+            }
+        }
+
+        function buyMercenaries() {
+            if (gameState.gold >= 300) {
+                gameState.gold -= 300;
+                gameState.army += 20;
+                addLog('Contrataste 20 mercenarios veteranos.', 'log-recruit');
+                updateUI();
+            } else {
+                addLog('No tienes suficiente oro.', 'log-defeat');
+            }
+        }
+
+        function sellResource(resource, amount, gain) {
+            if (gameState[resource] >= amount) {
+                gameState[resource] -= amount;
+                gameState.gold += gain;
+                addLog(`Vendiste ${amount} de ${resource} por ${gain}💰.`, 'log-build');
+                updateUI();
+            } else {
+                addLog(`No tienes suficiente ${resource}.`, 'log-defeat');
+            }
+        }
+
+        // Sistema de turnos
+        function nextTurn() {
+            gameState.turn++;
+            gameState.gold += gameState.goldPerTurn;
+            gameState.food += gameState.foodPerTurn;
+            gameState.stone += gameState.stonePerTurn;
+            gameState.wood += gameState.woodPerTurn;
+            gameState.population += gameState.populationGrowth;
+            
+            const foodConsumption = gameState.army + gameState.archers + (gameState.cavalry * 2) + gameState.population;
+            gameState.food -= foodConsumption;
+            
+            if (gameState.food < 0) {
+                const starvation = Math.floor(Math.abs(gameState.food) / 3);
+                gameState.population = Math.max(0, gameState.population - starvation);
+                gameState.food = 0;
+                addLog(`⚠️ HAMBRUNA. Perdiste ${starvation} ciudadanos por falta de comida.`, 'log-defeat');
+            }
+            
+            addLog(`Turno ${gameState.turn}. Generaste: ${gameState.goldPerTurn}💰 ${gameState.foodPerTurn}🌾 ${gameState.stonePerTurn}🪨 ${gameState.woodPerTurn}🪵`, 'log-build');
+            updateUI();
+        }
+
+        function showModal(title, text) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            document.getElementById('gameOverModal').style.display = 'flex';
+        }
+
+        function restartGame() {
+            gameState = {
+                gold: 1500,
+                food: 800,
+                stone: 200,
+                wood: 300,
+                army: 80,
+                archers: 30,
+                cavalry: 10,
+                population: 150,
+                defense: 30,
+                turn: 1,
+                armyPower: 1.0,
+                goldPerTurn: 120,
+                foodPerTurn: 70,
+                stonePerTurn: 20,
+                woodPerTurn: 30,
+                populationGrowth: 8
+            };
+            
+            buildings.forEach(b => b.built = false);
+            enemies.forEach(e => e.defeated = false);
+            territories.forEach((t, i) => {
+                if (i === 0) {
+                    t.status = 'player';
+                    t.conquered = true;
+                } else {
+                    t.conquered = false;
+                    t.status = i > 5 ? 'enemy' : 'neutral';
+                }
+            });
+            
+            document.getElementById('gameLog').innerHTML = '';
+            document.getElementById('gameOverModal').style.display = 'none';
+            
+            addLog('Un nuevo reino emerge. ¡Que comience tu leyenda!', 'log-build');
+            updateUI();
+        }
+
+        // Inicializar
+        addLog('Tu reino se alza en la oscuridad. Gobierna con sabiduría y conquista con fuerza.', 'log-build');
+        updateUI();
+    </script>
+</body>
+</html>
